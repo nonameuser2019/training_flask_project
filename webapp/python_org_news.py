@@ -1,6 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
 import lxml
+from datetime import datetime
+
+from webapp.model import  db, News
+
+
 link = 'https://www.python.org/'
 
 
@@ -15,21 +20,27 @@ def get_html(link):
 
 
 def get_python_news():
-    all_news = []
     page = get_html(link)
     soup = BeautifulSoup(page, 'lxml')
     news = soup.find('div', class_='shrubbery').find('ul', class_='menu').find_all('li')
     for row in news:
-        all_news.append({'title': row.find('a').text, 'url': row.find('a')['href'], 'time': row.find('time').text})
-    return all_news
+        title = row.find('a').text
+        url = row.find('a')['href']
+        published = row.find('time').text
+        try:
+            published= datetime.strptime(published, '%Y-%m-%d')
+        except (ValueError):
+            published = datetime.now()
+        save_news(title, url, published)
 
+def save_news(title, url, published):
+    news_exists = News.query.filter(News.url == url).count()
+    print(news_exists)
+    if not news_exists:
+        new_news = News(title=title, url=url, published=published)
+        db.session.add(new_news)
+        db.session.commit()
 
-def main():
-    all_news = get_python_news()
-    print(all_news)
-
-if __name__ == '__main__':
-    main()
 
 
 

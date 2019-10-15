@@ -11,4 +11,4 @@ class News(db.Model):
     text = db.Column(db.Text, nullable=True)
 
     def __repr__(self):
-        return f'News {self.title} {self.url}'
+        return '<News {} {}>'.format(self.title, self.url)
